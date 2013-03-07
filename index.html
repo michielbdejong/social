@@ -59,6 +59,12 @@ main panes:
 - private message button -->
   </body>
   <script src="sockethub.js"></script>
+  <script src="remotestorage/remotestorage-0.7.1.min.js"></script>
+<script src="remotestorage/sockethub_credentials.js"></script>
+  <script src="remotestorage/email_credentials.js"></script>
+  <script src="remotestorage/facebook_credentials.js"></script>
+  <script src="remotestorage/twitter_credentials.js"></script>
+  <script src="remotestorage/contacts.js"></script>
   <script>
     function value(id, val) {
       if(val) {
@@ -97,17 +103,12 @@ main panes:
           accessTokenSecret: value('twitterAccessTokenSecret')
         };
       }
-      localStorage.setItem(platform+'-credentials', JSON.stringify(creds));
+      remoteStorage[platform+'_credentials'].writeConfig('credentials', creds));
       return creds;
     }
     function reviveCredentials(platform, cb) {
-      var credsStr = localStorage.getItem(platform+'-credentials');
-      if(typeof(credsStr) == 'string') {
-        try {
-          creds = JSON.parse(credsStr);
-        } catch(e) {
-          return;
-        }
+      var creds = remoteStorage[platform+'_credentials'].getConfig('credentials');
+      if(typeof(creds) == 'object') {
         if(platform == 'sockethub') {
           value('sockethubServer', creds.sockethubServer);
           value('sockethubSecret', creds.sockethubSecret);
@@ -157,19 +158,34 @@ main panes:
     reviveCredentials('sockethub', connect);
     reviveCredentials('twitter');
     reviveCredentials('facebook');
-    var contacts = {};
-    //reviveContacts();
     displayContacts();
+    
     sockethub.oncontact(function(platform, address, name) {
-      contacts[platform+':'+address] = name;
+      remoteStorage.contacts.addContact(platform, address, {name: name});
       displayContacts();
     });
     function displayContacts() {
-      var str = '';
-      for(var i in contacts) {
-        str += '<li>'+contacts[i]+' <input type="submit" value="set as target" onclick="document.getElementById(\'target\').value = \''+i.split(':')[1]+'\';" /> </li>';
-      }
-      html('contacts', str);
+      remoteStorage.contacts.getContacts().then(function(contacts) {
+        var str = '';
+        for(var i in contacts) {
+          str += '<li>'+contacts[i]+' <input type="submit" value="set as target" onclick="document.getElementById(\'target\').value = \''+i.split(':')[1]+'\';" /> </li>';
+        }
+        html('contacts', str);
+      });
     }
+    remoteStorage.claimAccess({
+      sockethub_credentials: 'rw',
+      facebook_credentials: 'rw',
+      twitter_credentials: 'rw',
+      email_credentials: 'rw',
+      contacts: 'rw',
+    }).then(function() {
+      remoteStorage.displayWidget();
+      remoteStorage.sockethub_credentials.init();
+      remoteStorage.facebook_credentials.init();
+      remoteStorage.twitter_credentials.init();
+      remoteStorage.email_credentials.init();
+      remoteStorage.contacts.init();
+    });
   </script>
 </html>
