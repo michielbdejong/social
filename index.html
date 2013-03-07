@@ -1,4 +1,4 @@
-<!DOCTYPE>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -6,16 +6,23 @@
   </head>
   <body>
     <h1>This app requires a Sockethub server.</h1>
+    <div id="state"></div>
+<!--      states:
+- disconnected/failed [details]
+- trying to connect
+- connected [+twitter] [+facebook]
+-->
     <p>
       <a href="http://sockethub.org/">Sockethub</a> server:
       <ul>
         <li>Domain and port: <input id="sockethubServer" value="localhost:10550" /></li>
         <li>Secret: <input id="sockethubSecret" value="1234567890" /></li>
       </ul>
-      <input type="submit" value="connect" onclick="connect();" />
+      <input type="submit" value="connect" onclick="connect();" /> (you may have to click twice)
     </p>
     <p>
       <a href="https://dev.twitter.com/apps">Twitter</a> credentials:
+      <input type="submit" value="save" onclick="getCredentials('twitter');" />
       <ul>
         <li>Consumer Key: <input id="twitterConsumerKey" /></li>
         <li>Consumer Secret: <input id="twitterConsumerSecret" /></li>
@@ -25,18 +32,26 @@
     </p>
     <p>
       <a href="https://unhosted.org/adventures/5/Facebook-and-Twitter-from-nodejs.html">Facebook</a> credentials:
+      <input type="submit" value="save" onclick="getCredentials('facebook');" />
       <ul>
         <li>Token: <input id="facebookToken" /></li>
       </ul>
     </p>
-    <p>   
-      Text: <input id="text" style="width:70em">
-      <input type="submit" value="f" onclick="sendTo('facebook');" style="background-color:#008;color:#fff" />
-      <input type="submit" value="t" onclick="sendTo('twitter');" style="background-color:#bbf;color:#fff" />
-   </p>
    <h1>Log:</h1>
    <ul id="log">
    </ul>
+    <p>   
+      Text: <input id="text" style="width:70em" /> 
+      Target URL: <input id="targetUrl" value="/me/feed" />
+      <input type="submit" value="f" onclick="sendTo('facebook');" style="background-color:#008;color:#fff" />
+      <input type="submit" value="t" onclick="sendTo('twitter');" style="background-color:#bbf;color:#fff" />
+   </p>
+<!--
+main panes:
+- recipients
+- write (first line is subject)
+- forum-wide post button
+- private message button -->
   </body>
   <script src="sockethub.js"></script>
   <script>
@@ -54,7 +69,12 @@
     }
     function getCredentials(platform) {
       var creds;
-      if(platform == 'facebook') {
+      if(platform == 'sockethub') {
+        creds = {
+          server: value('sockethubServer'),
+          secret: value('sockethubSecret')
+        };
+      } else if(platform == 'facebook') {
         creds = {
           token: value('facebookToken')
         };
@@ -69,7 +89,7 @@
       localStorage.setItem(platform+'-credentials', JSON.stringify(creds));
       return creds;
     }
-    function reviveCredentials(platform) {
+    function reviveCredentials(platform, cb) {
       var credsStr = localStorage.getItem(platform+'-credentials');
       if(typeof(credsStr) == 'string') {
         try {
@@ -77,13 +97,19 @@
         } catch(e) {
           return;
         }
-        if(platform == 'facebook') {
+        if(platform == 'sockethub') {
+          value('sockethubServer', creds.sockethubServer);
+          value('sockethubSecret', creds.sockethubSecret);
+        } else if(platform == 'facebook') {
           value('facebookToken', creds.token);
         } else {
           value('twitterConsumerKey', creds.consumerKey);
           value('twitterConsumerSecret', creds.consumerSecret);
           value('twitterAccessToken', creds.accessToken);
           value('twitterAccessTokenSecret', creds.accessTokenSecret);
+        }
+        if(cb) {
+          cb();
         }
       }
     }
@@ -98,9 +124,12 @@
     function sendTo(platform) {
       sockethub.post(platform, getCredentials(platform), {
         text: value('text')
+      }, {
+        url: value('targetUrl')
       });
     }
     log('Ready for you to click "Connect"');
+    reviveCredentials('sockethub', connect);
     reviveCredentials('twitter');
     reviveCredentials('facebook');
   </script>

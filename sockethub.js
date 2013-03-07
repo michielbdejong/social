@@ -65,12 +65,32 @@ window.sockethub = (function() {
         }
       }
     },
-    post: function(platform, credentials, object) {
+    post: function(platform, credentials, object, target) {
+      send({
+        platform: 'dispatcher',
+        verb: 'set',
+        object: {
+          credentials: {
+            me: {
+              actor: {
+                address: "me"
+              },
+              access_token: credentials.token
+            }
+          }
+        },
+        target: {
+          platform: platform
+        }
+      });
       send({
         platform: platform,
-        credentials: credentials,
         verb: 'post',
-        object: object
+        object: object,
+        target: target,
+        actor: {
+          address: 'me'
+        }
       });
     },
     getState: function() {
