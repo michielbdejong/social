@@ -22,7 +22,7 @@
     </p>
     <p>
       <a href="https://dev.twitter.com/apps">Twitter</a> credentials:
-      <input type="submit" value="save" onclick="getCredentials('twitter');" />
+      <input type="submit" value="save" onclick="getCredentials('twitter');fetchContacts('twitter');" />
       <ul>
         <li>Consumer Key: <input id="twitterConsumerKey" /></li>
         <li>Consumer Secret: <input id="twitterConsumerSecret" /></li>
@@ -32,14 +32,18 @@
     </p>
     <p>
       <a href="https://unhosted.org/adventures/5/Facebook-and-Twitter-from-nodejs.html">Facebook</a> credentials:
-      <input type="submit" value="save" onclick="getCredentials('facebook');" />
+      <input type="submit" value="save" onclick="getCredentials('facebook');fetchContacts('facebook');" />
       <ul>
         <li>Token: <input id="facebookToken" /></li>
       </ul>
     </p>
-   <h1>Log:</h1>
-   <ul id="log">
-   </ul>
+
+    <h1>Contacts:</h1>
+    <ul id="contacts"></ul>
+
+    <h1>Log:</h1>
+    <ul id="log">
+    </ul>
     <p>   
       Text: <input id="text" style="width:70em" /> 
       Target URL: <input id="targetUrl" value="/me/feed" />
@@ -60,6 +64,12 @@ main panes:
         document.getElementById(id).value = val;
       }
       return document.getElementById(id).value;
+    }
+    function html(id, val) {
+      if(val) {
+        document.getElementById(id).innerHTML = val;
+      }
+      return document.getElementById(id).innerHTML;
     }
     function log(msg) {
       if(typeof(msg) != 'string') {
@@ -121,6 +131,9 @@ main panes:
       sockethub.on('error', log);
       sockethub.on('activity', log);
     }
+    function fetchContacts(platform) {
+      sockethub.fetch(platform, getCredentials(platform), null, 'friends');
+    }
     function sendTo(platform) {
       sockethub.post(platform, getCredentials(platform), {
         text: value('text')
@@ -132,5 +145,19 @@ main panes:
     reviveCredentials('sockethub', connect);
     reviveCredentials('twitter');
     reviveCredentials('facebook');
+    var contacts = {};
+    //reviveContacts();
+    displayContacts();
+    sockethub.oncontact(function(platform, address, name) {
+      contacts[platform+':'+address] = name;
+      displayContacts();
+    });
+    function displayContacts() {
+      var str = '';
+      for(var i in contacts) {
+        str += '<li> '+i+' -> '+contacts[i]+'</li>';
+      }
+      html('contacts', str);
+    }
   </script>
 </html>

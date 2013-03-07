@@ -21,7 +21,14 @@ window.sockethub = (function() {
       handler.error('sockethub is not open, sorry');
     }
   }
+  function addContact(platform, address, name) {
+    console.log('no contact discovery handler', platform, address, name);
+  }
+  
   return {
+    oncontact: function(cb) {
+      addContact = cb;
+    },
     connect: function(setHost, setSecret) {
       host = setHost;
       sock = new WebSocket('ws://'+host+'/', 'sockethub');
@@ -52,6 +59,10 @@ window.sockethub = (function() {
             handler.ready();
           } else {
             handler.error(data.message);
+          }
+        } else if(data.verb == 'fetch' && data.status && data.object && data.object.data) {
+          for(var i=0; i<data.object.data.length; i++) {
+            addContact(data.platform, data.object.data[i].id, data.object.data[i].name);
           }
         } else {
           handler.activity(data);
@@ -91,6 +102,34 @@ window.sockethub = (function() {
         actor: {
           address: 'me'
         }
+      });
+    },
+    fetch: function(platform, credentials, object, target) {
+      send({
+        platform: 'dispatcher',
+        verb: 'set',
+        object: {
+          credentials: {
+            me: {
+              actor: {
+                address: "me"
+              },
+              access_token: credentials.token
+            }
+          }
+        },
+        target: {
+          platform: platform
+        }
+      });
+      //fetching:
+      send({
+        platform: platform,
+        verb: 'fetch',
+        actor: {
+          address: 'me'
+        },
+        target: target
       });
     },
     getState: function() {
