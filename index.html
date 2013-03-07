@@ -46,9 +46,10 @@
     </ul>
     <p>   
       Text: <input id="text" style="width:70em" /> 
-      Target URL: <input id="targetUrl" value="/me/feed" />
-      <input type="submit" value="f" onclick="sendTo('facebook');" style="background-color:#008;color:#fff" />
-      <input type="submit" value="t" onclick="sendTo('twitter');" style="background-color:#bbf;color:#fff" />
+      Platform: <input id="platform" value="facebook" />
+      Target: <input id="target" value="me" />
+      <input type="submit" value="forum-wide mention" onclick="post();" />
+      <input type="submit" value="private message" onclick="message();" />
    </p>
 <!--
 main panes:
@@ -134,11 +135,22 @@ main panes:
     function fetchContacts(platform) {
       sockethub.fetch(platform, getCredentials(platform), null, 'friends');
     }
-    function sendTo(platform) {
-      sockethub.post(platform, getCredentials(platform), {
+    function post() {
+      if(value('platform') != 'facebook') {
+        alert('not implemented yet, sorry!');
+      }
+      sockethub.post(value('platform'), getCredentials(value('platform')), {
         text: value('text')
       }, {
-        url: value('targetUrl')
+        address: value('target')
+      });
+    }
+    function message() {
+      alert('not implemented yet, sorry!');
+      sockethub.message(value('platform'), getCredentials(value('platform')), {
+        text: value('text')
+      }, {
+        address: value('target')
       });
     }
     log('Ready for you to click "Connect"');
@@ -155,7 +167,7 @@ main panes:
     function displayContacts() {
       var str = '';
       for(var i in contacts) {
-        str += '<li> '+i+' -> '+contacts[i]+'</li>';
+        str += '<li>'+contacts[i]+' <input type="submit" value="set as target" onclick="document.getElementById(\'target\').value = \''+i.split(':')[1]+'\';" /> </li>';
       }
       html('contacts', str);
     }
