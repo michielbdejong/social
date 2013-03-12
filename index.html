@@ -5,7 +5,8 @@
     <title>unhosted social dashboard example</title>
   </head>
   <body>
-    <h1>This app requires a Sockethub server.</h1>
+    <h1>This app requires a Sockethub server
+on the <a href="https://github.com/michielbdejong/sockethub">adventures fork</a>.</h1>
     <div id="state"></div>
 <!--      states:
 - disconnected/failed [details]
@@ -60,10 +61,6 @@ main panes:
   </body>
   <script src="sockethub.js"></script>
   <script src="remotestorage/remotestorage-0.7.1.min.js"></script>
-<script src="remotestorage/sockethub_credentials.js"></script>
-  <script src="remotestorage/email_credentials.js"></script>
-  <script src="remotestorage/facebook_credentials.js"></script>
-  <script src="remotestorage/twitter_credentials.js"></script>
   <script src="remotestorage/contacts.js"></script>
   <script>
     function value(id, val) {
@@ -103,11 +100,15 @@ main panes:
           accessTokenSecret: value('twitterAccessTokenSecret')
         };
       }
-      remoteStorage[platform+'_credentials'].writeConfig('credentials', creds));
+      localStorage[platform+'_credentials'] = JSON.stringify(creds);
       return creds;
     }
     function reviveCredentials(platform, cb) {
-      var creds = remoteStorage[platform+'_credentials'].getConfig('credentials');
+      var creds;
+      try {
+        creds = JSON.parse(localStorage[platform+'_credentials']);
+      } catch(e) {
+      }
       if(typeof(creds) == 'object') {
         if(platform == 'sockethub') {
           value('sockethubServer', creds.sockethubServer);
@@ -174,17 +175,9 @@ main panes:
       });
     }
     remoteStorage.claimAccess({
-      sockethub_credentials: 'rw',
-      facebook_credentials: 'rw',
-      twitter_credentials: 'rw',
-      email_credentials: 'rw',
-      contacts: 'rw',
+      contacts: 'rw'
     }).then(function() {
       remoteStorage.displayWidget();
-      remoteStorage.sockethub_credentials.init();
-      remoteStorage.facebook_credentials.init();
-      remoteStorage.twitter_credentials.init();
-      remoteStorage.email_credentials.init();
       remoteStorage.contacts.init();
     });
   </script>
