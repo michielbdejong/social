@@ -147,7 +147,7 @@ on the <a href="https://github.com/michielbdejong/sockethub">adventures fork</a>
     displayContacts();
     
     sockethub.oncontact(function(platform, address, name) {
-      remoteStorage.contacts.addContact(platform, address, {name: name});
+      remoteStorage.contacts.addContact(platform, address, name);
       displayContacts();
     });
     function displayContacts() {
