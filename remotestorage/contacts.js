@@ -6,8 +6,8 @@ remoteStorage.defineModule('contacts', function(privateClient, publicClient) {
         publicClient.release('');
       },
 
-      getContacts: function() {
-        return privateClient.getAll('');
+      getContacts: function(platform) {
+        return privateClient.getAll(platform+'/');
       },
 
       addContact: function(platform, address, data) {

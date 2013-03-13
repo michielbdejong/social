@@ -50,14 +50,7 @@ on the <a href="https://github.com/michielbdejong/sockethub">adventures fork</a>
       Platform: <input id="platform" value="facebook" />
       Target: <input id="target" value="me" />
       <input type="submit" value="forum-wide mention" onclick="post();" />
-      <input type="submit" value="private message" onclick="message();" />
-   </p>
-<!--
-main panes:
-- recipients
-- write (first line is subject)
-- forum-wide post button
-- private message button -->
+    </p>
   </body>
   <script src="sockethub.js"></script>
   <script src="remotestorage/remotestorage-0.7.1.js"></script>
@@ -147,14 +140,6 @@ main panes:
         address: value('target')
       });
     }
-    function message() {
-      alert('not implemented yet, sorry!');
-      sockethub.message(value('platform'), getCredentials(value('platform')), {
-        text: value('text')
-      }, {
-        address: value('target')
-      });
-    }
     log('Ready for you to click "Connect"');
     reviveCredentials('sockethub', connect);
     reviveCredentials('twitter');
@@ -162,14 +147,21 @@ main panes:
     displayContacts();
     
     sockethub.oncontact(function(platform, address, name) {
+      console.log('adding contact');
+      console.log(platform);
+      console.log(address);
+      console.log(name);
       remoteStorage.contacts.addContact(platform, address, {name: name});
       displayContacts();
     });
     function displayContacts() {
-      remoteStorage.contacts.getContacts().then(function(contacts) {
+      remoteStorage.contacts.getContacts('facebook').then(function(contacts) {
         var str = '';
+        console.log('contacts obtained');
+        console.log(typeof(contacts));
+        console.log(JSON.stringify(contacts));
         for(var i in contacts) {
-          str += '<li>'+contacts[i]+' <input type="submit" value="set as target" onclick="document.getElementById(\'target\').value = \''+i.split(':')[1]+'\';" /> </li>';
+          str += '<li>'+contacts[i].name+' <input type="submit" value="set as target" onclick="document.getElementById(\'target\').value = \''+i+'\';" /> </li>';
         }
         html('contacts', str);
       });
