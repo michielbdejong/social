@@ -60,7 +60,7 @@ main panes:
 - private message button -->
   </body>
   <script src="sockethub.js"></script>
-  <script src="remotestorage/remotestorage-0.7.1.min.js"></script>
+  <script src="remotestorage/remotestorage-0.7.1.js"></script>
   <script src="remotestorage/contacts.js"></script>
   <script>
     function value(id, val) {
@@ -178,7 +178,7 @@ main panes:
       contacts: 'rw'
     }).then(function() {
       remoteStorage.displayWidget();
-      remoteStorage.contacts.init();
+      //remoteStorage.contacts.init();
     });
   </script>
 </html>
