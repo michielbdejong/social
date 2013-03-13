@@ -2,8 +2,9 @@ remoteStorage.defineModule('contacts', function(privateClient, publicClient) {
   return {
     exports: {
       init: function () {
-        privateClient.release('');
-        publicClient.release('');
+        //TODO: find out what's making this code error and put it back:
+        //privateClient.release('');
+        //publicClient.release('');
         privateClient.declareType('contact', {
           description: 'an entry in the user\'s addressbook',
           type: 'object',
