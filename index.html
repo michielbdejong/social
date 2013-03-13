@@ -147,10 +147,6 @@ on the <a href="https://github.com/michielbdejong/sockethub">adventures fork</a>
     displayContacts();
     
     sockethub.oncontact(function(platform, address, name) {
-      console.log('adding contact');
-      console.log(platform);
-      console.log(address);
-      console.log(name);
       remoteStorage.contacts.addContact(platform, address, {name: name});
       displayContacts();
     });
@@ -158,8 +154,8 @@ on the <a href="https://github.com/michielbdejong/sockethub">adventures fork</a>
       remoteStorage.contacts.getContacts('facebook').then(function(contacts) {
         var str = '';
         console.log('contacts obtained');
-        console.log(typeof(contacts));
-        console.log(JSON.stringify(contacts));
+        //console.log(typeof(contacts));
+        //console.log(JSON.stringify(contacts));
         for(var i in contacts) {
           str += '<li>'+contacts[i].name+' <input type="submit" value="set as target" onclick="document.getElementById(\'target\').value = \''+i+'\';" /> </li>';
         }
