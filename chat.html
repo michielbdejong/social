@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+  </body>
+  <script>
+    var sock;
+    function getSocket(user, host, cb) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'https://'+host+'/.well-known/webfinger?resource=acct%3A'+user+'%40'+host, true);
+      xhr.onload = function() {
+        if(this.status==200) {
+          var data;
+          try {
+            data = JSON.parse(xhr.responseText);
+          } catch(e) {
+            cb('unparseable');
+          }
+          for(var i=0; i<data.links.length; i++) {
+            if(data.links[i].rel && data.links[i].rel=='webrtc') {
+              cb(null, data.links[i].href);
+              return;
+            }
+          }
+        } else {
+          cb(this.status);
+        }
+      };
+      xhr.send();
+    }
+    function startChat(user, host) {
+      getSocket(user, host, function(err, data) {
+        console.log(err);
+        console.log(data);
+        if(!err) {
+          sock = new WebSocket(data);
+          sock.onopen = function() {
+            console.log('chatting with '+user+'@'+host);
+          }
+          sock.onmessage = function(data) {
+            console.log('received: '+data);
+          }
+          sock.onclose = function() {
+            console.log('conversation with '+user+'@'+host+' ended');
+            sock = undefined;
+          }
+        }
+      });
+    }
+    function say(data) {
+      if(sock) { 
+        sock.send(data);
+      }
+    }
+    startChat('anything', 'michielbdejong.com');
+    say('hello');
+  </script>
+</html>
