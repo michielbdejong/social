@@ -39,8 +39,8 @@
           sock.onopen = function() {
             console.log('chatting with '+user+'@'+host);
           }
-          sock.onmessage = function(data) {
-            console.log('received: '+data);
+          sock.onmessage = function(e) {
+            console.log('received: '+e.data);
           }
           sock.onclose = function() {
             console.log('conversation with '+user+'@'+host+' ended');
