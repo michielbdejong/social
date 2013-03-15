@@ -104,6 +104,13 @@ window.sockethub = (function() {
         }
       });
     },
+    listen: function(platform, object) {
+      send({
+        platform: platform,
+        verb: 'listen',
+        object: object
+      });
+    },
     fetch: function(platform, credentials, object, target) {
       send({
         platform: 'dispatcher',

@@ -4,8 +4,45 @@
     <meta charset="utf-8" />
   </head>
   <body>
+    <div>
+      <p>If you have a sockethub server on the <a href="https://github.com/michielbdejong/sockethub">adventures fork</a>,
+        then you can sign in so people can see you're online:</p>
+      <p>Host:<input id="sockethubHost" /></p>
+      <p>Secret:<input id="sockethubSecret" /></p>
+      <p><input type="submit" value="connect" onclick="connect();" />
+        <input type="submit" value="online" onclick="setOnline(true);" />
+        <input type="submit" value="offline" onclick="setOnline(false);" /></p>
+    </div>
+    <div>
+      <h1>Contacts:</h1>
+      <p id="contact0" data-user="anything" data-host="michielbdejong.com">Michiel B. de Jong &lt;anything@michielbdejong.com&gt;
+        <span id="status0">(status unknown) <input type="submit" value="check" onclick="check(0);" /></span></p>
+    </div>
   </body>
+  <script src="sockethub.js"></script>
   <script>
+    function $(id) {
+      return document.getElementById(id);
+    }
+    function check(id) {
+      startChat($('contact'+id).getAttribute('data-user'), $('contact'+id).getAttribute('data-host'), function(online) {
+        if(online) {
+          $('status'+id).innerHTML = '[online!] <input type="submit" value="chat" onclick="chat('+id+');" />';
+        } else {
+          $('status'+id).innerHTML = '(unreachable) <input type="submit" value="check" onclick="check('+id+');" />';
+        }
+      });
+    }
+    function connect() {
+      sockethub.connect($('sockethubHost').value, $('sockethubSecret').value);
+    }
+    function setOnline(val) {
+      sockethub.listen('webrtc', val);
+    }
+    function chat() {
+      say('hi');
+    }
+    
     var sock;
     function getSocket(user, host, cb) {
       var xhr = new XMLHttpRequest();
@@ -30,7 +67,7 @@
       };
       xhr.send();
     }
-    function startChat(user, host) {
+    function startChat(user, host, cb) {
       getSocket(user, host, function(err, data) {
         console.log(err);
         console.log(data);
@@ -38,6 +75,7 @@
           sock = new WebSocket(data);
           sock.onopen = function() {
             console.log('chatting with '+user+'@'+host);
+            cb(true);
           }
           sock.onmessage = function(e) {
             console.log('received: '+e.data);
@@ -45,6 +83,7 @@
           sock.onclose = function() {
             console.log('conversation with '+user+'@'+host+' ended');
             sock = undefined;
+            cb(false);
           }
         }
       });
@@ -54,7 +93,5 @@
         sock.send(data);
       }
     }
-    startChat('anything', 'michielbdejong.com');
-    say('hello');
   </script>
 </html>
