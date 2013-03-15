@@ -18,6 +18,10 @@
       <p id="contact0" data-user="anything" data-host="michielbdejong.com">Michiel B. de Jong &lt;anything@michielbdejong.com&gt;
         <span id="status0">(status unknown) <input type="submit" value="check" onclick="check(0);" /></span></p>
     </div>
+    <div style="display:none" id="chat-div">
+      <h1>Chat with <span id="peer-name">(unknown)</span></h1>
+      <input id="write" placeholder="say something..." onkeyup="keyHit(event);" />
+      <ul id="chat-log"></ul>
   </body>
   <script src="sockethub.js"></script>
   <script>
@@ -35,14 +39,40 @@
     }
     function connect() {
       sockethub.connect($('sockethubHost').value, $('sockethubSecret').value);
+      sockethub.on('activity', function(activity) {
+        console.log(activity);
+        if(activity.verb == 'enter') {
+          $('peer-name').innerHTML = activity.actor;
+          $('chat-div').style.display='block';
+        } else if(activity.verb == 'say') {
+          $('chat-log').innerHTML += '<li>'+activity.actor+': '+activity.object.data+'</li>';
+          $('chat-div').style.display='block';
+        }
+      });
     }
     function setOnline(val) {
       sockethub.listen('webrtc', val);
     }
-    function chat() {
-      say('hi');
+    function chat(id) {
+      $('peer-name').innerHTML = $('contact'+id).getAttribute('data-user')+'@'+$('contact'+id).getAttribute('data-host');
+      $('chat-div').style.display='block';
     }
-    
+    function keyHit(e) {
+      if(e.keyCode==13) {//<enter>
+        if(sock) { 
+          sock.send($('write').value);
+        } else {
+          //sockethub.post('webrtc', null, {
+          sockethub.listen('webrtc', {
+            text: $('write').value
+          }, {
+            address: $('peer-name').innerHTML
+          });
+        }
+        $('chat-log').innerHTML += '<li>you: '+$('write').value+'</li>';
+        $('write').value = '';
+      }
+    }
     var sock;
     function getSocket(user, host, cb) {
       var xhr = new XMLHttpRequest();
@@ -79,6 +109,7 @@
           }
           sock.onmessage = function(e) {
             console.log('received: '+e.data);
+            $('chat-log').innerHTML += '<li>peer: '+e.data+'</li>';
           }
           sock.onclose = function() {
             console.log('conversation with '+user+'@'+host+' ended');

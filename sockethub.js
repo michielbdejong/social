@@ -65,6 +65,8 @@ window.sockethub = (function() {
             addContact(data.platform, data.object.data[i].id, data.object.data[i].name);
           }
         } else {
+          console.log('calling activity handler');
+          console.log(data);
           handler.activity(data);
         }
       };
@@ -77,23 +79,25 @@ window.sockethub = (function() {
       }
     },
     post: function(platform, credentials, object, target) {
-      send({
-        platform: 'dispatcher',
-        verb: 'set',
-        object: {
-          credentials: {
-            me: {
-              actor: {
-                address: "me"
-              },
-              access_token: credentials.token
+      if(credentials) {
+        send({
+          platform: 'dispatcher',
+          verb: 'set',
+          object: {
+            credentials: {
+              me: {
+                actor: {
+                  address: "me"
+                },
+                access_token: credentials.token
+              }
             }
+          },
+          target: {
+            platform: platform
           }
-        },
-        target: {
-          platform: platform
-        }
-      });
+        });
+      }
       send({
         platform: platform,
         verb: 'post',
@@ -105,6 +109,8 @@ window.sockethub = (function() {
       });
     },
     listen: function(platform, object) {
+      console.log('listen');
+      console.log(object);
       send({
         platform: platform,
         verb: 'listen',
