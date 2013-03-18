@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>voip - michiel</title>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <p>If you have a sockethub server on the <a href="https://github.com/michielbdejong/sockethub">adventures fork</a>,
+      then you can sign in so people can see you're online:</p>
+    <p>Server:<input id="sockethubServer" /></p>
+    <p>Secret:<input id="sockethubSecret" /></p>
+    <input type="submit" value="connect" onclick="connect();" />
+    <input value="listen" type="submit" onclick="listen();" />
+  </body>
+  <script>
+    function listen() {
+       sock.send(JSON.stringify({
+        rid: 'voip-'+new Date().getTime(),
+        platform: 'webrtc',
+        verb: 'listen'
+      }));
+    }
+    var pc = (typeof(mozRTCPeerConnection) == 'undefined' ?
+          new webkitRTCPeerConnection({"iceServers": [{"url": "stun:stun.l.google.com:19302"}]}) :
+          new mozRTCPeerConnection({"iceServers": [{"url": "stun:stun.l.google.com:19302"}]})),
+      sock;
+    pc.onicecandidate = function(evt) {
+      sock.send(JSON.stringify({
+        rid: 'voip-'+new Date().getTime(),
+        platform: 'webrtc',
+        verb: 'send',
+        object: {
+          candidate: evt.candidate
+        }
+      }));
+    };
+    function connect() {
+      sock = new WebSocket(document.getElementById('sockethubServer').value, 'sockethub');
+      sock.onopen = function() {
+        sock.send(JSON.stringify({
+          rid: 'voip-'+new Date().getTime(),
+          platform: 'dispatcher',
+          verb: 'register',
+          object: {
+            secret: document.getElementById('sockethubSecret').value
+          }
+        }));
+      };
+      sock.onmessage = function(e) {
+        console.log('incoming', e.data);
+        var obj = JSON.parse(e.data);
+        if(obj.object && obj.object.data) {
+          obj = JSON.parse(obj.object.data);
+        }
+        if(obj.candidate) {
+          pc.addIceCandidate((typeof(mozRTCIceCandidate) == 'undefined' ?
+              new RTCIceCandidate(obj.candidate) :
+              new mozRTCIceCandidate(obj.candidate)));
+        } else if(obj.description) {
+          pc.setRemoteDescription((typeof(mozRTCSessionDescription) == 'undefined' ?
+              new RTCSessionDescription(obj.description) :
+              new mozRTCSessionDescription(obj.description)));
+          pc.createAnswer(function(localDesc) {
+            pc.setLocalDescription(localDesc);
+            sock.send(JSON.stringify({
+              rid: 'voip-'+new Date().getTime(),
+              platform: 'webrtc',
+              //verb: 'post',
+              verb: 'listen',
+              object: {
+                text: JSON.stringify({description: localDesc})
+              }
+            }));
+          });
+        }
+      };
+    }
+  </script>
+</html>
